@@ -2,6 +2,8 @@
 <launch>
     <arg name="human_tf" value="human" />
     <param name="served_action_name" type="string" value="repeat_action" />
+    <param name="get_plan_service_name" type="string" value="move_base/make_plan" />
+    <param name="odometry_topic" type="string" value="mobile_base_controller/odom" />
     
     <node pkg="repeat_action_server" name="action_server" type="repeat_action_server" output="screen" />
     <node pkg="tf" type="static_transform_publisher" name="human_publisher" args="3 2 0 0 0 0 1 map $(arg human_tf) 100" />

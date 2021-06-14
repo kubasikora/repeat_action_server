@@ -8,7 +8,8 @@
 
 #include<ros/ros.h>
 #include<tf/transform_listener.h>
-
+#include<nav_msgs/Path.h>
+#include<nav_msgs/Odometry.h>
 
 class AskToRepeatActionServer {
   protected:
@@ -20,7 +21,13 @@ class AskToRepeatActionServer {
     repeat_action_server::AskToRepeatFeedback feedback_;
     repeat_action_server::AskToRepeatResult result_;
 
+    ros::Subscriber odometrySub_;
+    nav_msgs::Odometry currentOdom_;
     ros::ServiceClient client_;
+    ros::Publisher planPublisher_;
+
+    void robotOdometryCallback(const nav_msgs::Odometry message);
+    nav_msgs::Path getPlan();
 
   public:
     AskToRepeatActionServer();

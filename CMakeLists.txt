@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(repeat_action_server)
 
-find_package(catkin REQUIRED COMPONENTS actionlib roscpp tf)
+find_package(catkin REQUIRED COMPONENTS actionlib roscpp tf nav_msgs)
 
 add_action_files(DIRECTORY actions FILES AskToRepeat.action)
 generate_messages(DEPENDENCIES actionlib_msgs std_msgs)
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS actionlib roscpp tf
+  CATKIN_DEPENDS actionlib roscpp tf nav_msgs
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS})
