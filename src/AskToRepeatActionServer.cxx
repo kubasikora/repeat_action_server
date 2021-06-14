@@ -54,14 +54,33 @@ nav_msgs::Path AskToRepeatActionServer::getPlan(){
     }
 }
 
+void AskToRepeatActionServer::moveHead(){
+    control_msgs::PointHeadGoal goal;
+    goal.target.header.frame_id = getParamValue<std::string>("human_tf");
+    goal.target.point.z = 1.0;
+    goal.pointing_axis.x = 1.0; goal.pointing_axis.y = 0.0; goal.pointing_axis.z = 0.0;
+    goal.pointing_frame = getParamValue<std::string>("/head_controller/point_head_action/tilt_link");
+    goal.max_velocity = getParamValue<double>("head_turning_velocity");
+    headClient_.sendGoal(goal);
+    
+    while(ros::ok()){
+        actionlib::SimpleClientGoalState state = headClient_.getState();
+        if(state.isDone()){
+            return;
+        }
+    }
+}
+
 AskToRepeatActionServer::AskToRepeatActionServer() :
     actionServer_(nh_, getParamValue<std::string>("served_action_name"), boost::bind(&AskToRepeatActionServer::executeCallback, this, _1), false),
-    actionClient_(getParamValue<std::string>("move_base_action_name"), true)
+    baseClient_(getParamValue<std::string>("move_base_action_name"), true),
+    headClient_(getParamValue<std::string>("move_head_action_name"), true)
 {   
     odometrySub_ = nh_.subscribe(getParamValue<std::string>("odometry_topic"), 1000, &AskToRepeatActionServer::robotOdometryCallback, this);
     client_ = nh_.serviceClient<nav_msgs::GetPlan>(getParamValue<std::string>("get_plan_service_name"));
-    actionClient_.waitForServer();
-
+    baseClient_.waitForServer();
+    headClient_.waitForServer();
+    
     actionServer_.start();
     ROS_INFO("%s server ready", getParamValue<std::string>("served_action_name").c_str());
 }
@@ -74,8 +93,9 @@ void AskToRepeatActionServer::executeCallback(const repeat_action_server::AskToR
         geometry_msgs::PoseStamped goalPose = plan.poses[plan.poses.size() - 1];
         move_base_msgs::MoveBaseGoal navigationGoal;
         navigationGoal.target_pose = goalPose;
-        actionClient_.sendGoal(navigationGoal);
-        actionClient_.waitForResult();
+        baseClient_.sendGoal(navigationGoal);
+        baseClient_.waitForResult();
+        moveHead();
     }
 
     std_msgs::String resultStatus;

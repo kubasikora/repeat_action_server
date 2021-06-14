@@ -11,6 +11,7 @@
 #include<tf/transform_listener.h>
 #include<nav_msgs/Path.h>
 #include<nav_msgs/Odometry.h>
+#include<control_msgs/PointHeadAction.h>
 
 class AskToRepeatActionServer {
   protected:
@@ -21,7 +22,9 @@ class AskToRepeatActionServer {
     actionlib::SimpleActionServer<repeat_action_server::AskToRepeatAction> actionServer_;
     repeat_action_server::AskToRepeatFeedback feedback_;
     repeat_action_server::AskToRepeatResult result_;
-    actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> actionClient_;
+    
+    actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> baseClient_;
+    actionlib::SimpleActionClient<control_msgs::PointHeadAction> headClient_;
 
     ros::Subscriber odometrySub_;
     nav_msgs::Odometry currentOdom_;
@@ -29,6 +32,7 @@ class AskToRepeatActionServer {
 
     void robotOdometryCallback(const nav_msgs::Odometry message);
     geometry_msgs::Pose getPose(const std::string point, const std::string origin);
+    void moveHead();
     nav_msgs::Path getPlan();
 
   public:

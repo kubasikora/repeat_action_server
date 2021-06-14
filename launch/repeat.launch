@@ -4,8 +4,10 @@
     <param name="served_action_name" type="string" value="/repeat_action" />
     <param name="get_plan_service_name" type="string" value="/move_base/make_plan" />
     <param name="move_base_action_name" type="string" value="/move_base" />
+    <param name="move_head_action_name" type="string" value="/head_controller/point_head_action" />
     <param name="odometry_topic" type="string" value="/mobile_base_controller/odom" />
     <param name="human_tf" type="string" value="$(arg human_tf)" />
-    
+    <param name="head_turning_velocity" type="double" value="0.4" />
+
     <node pkg="repeat_action_server" name="repeat_action_server" type="repeat_action_server" output="screen" />
 </launch>
