@@ -24,9 +24,9 @@ class AskToRepeatActionServer {
     ros::Subscriber odometrySub_;
     nav_msgs::Odometry currentOdom_;
     ros::ServiceClient client_;
-    ros::Publisher planPublisher_;
 
     void robotOdometryCallback(const nav_msgs::Odometry message);
+    geometry_msgs::Pose getPose(const std::string point, const std::string origin);
     nav_msgs::Path getPlan();
 
   public:

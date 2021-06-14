@@ -3,45 +3,50 @@
 #include<std_msgs/String.h>
 #include<nav_msgs/GetPlan.h>
 #include<exception>
+#include<math.h>
 
 void AskToRepeatActionServer::robotOdometryCallback(const nav_msgs::Odometry message){
     currentOdom_ = message;
 }
 
+geometry_msgs::Pose AskToRepeatActionServer::getPose(const std::string point, const std::string origin){
+    tf::StampedTransform transformation;
+    TFlistener_.lookupTransform(point, origin, ros::Time(0), transformation);
+    tf::Transform inversedTransformation = transformation.inverse();
+
+    geometry_msgs::Pose pose;
+    pose.position.x = inversedTransformation.getOrigin().x();
+    pose.position.y = inversedTransformation.getOrigin().y();
+    pose.position.z = inversedTransformation.getOrigin().z();
+    pose.orientation.x = inversedTransformation.getRotation().x();
+    pose.orientation.y = inversedTransformation.getRotation().y();
+    pose.orientation.z = inversedTransformation.getRotation().z();
+    pose.orientation.w = inversedTransformation.getRotation().w();
+
+    return pose;
+}
+
+
 nav_msgs::Path AskToRepeatActionServer::getPlan(){
     nav_msgs::GetPlan srv;
     srv.request.start.header.frame_id = "map";
-
-    tf::StampedTransform humanTF;
-    TFlistener_.lookupTransform(getParamValue<std::string>("human_tf"), "map", ros::Time(0), humanTF);
-    tf::Transform humanTFinversed = humanTF.inverse();
+    srv.request.start.pose = getPose("base_link", "map");
     srv.request.goal.header.frame_id = "map";
-    srv.request.goal.pose.position.x = humanTFinversed.getOrigin().x();
-    srv.request.goal.pose.position.y = humanTFinversed.getOrigin().y();
-    srv.request.goal.pose.position.z = humanTFinversed.getOrigin().z();
-    srv.request.goal.pose.orientation.x = humanTFinversed.getRotation().x();
-    srv.request.goal.pose.orientation.y = humanTFinversed.getRotation().y();
-    srv.request.goal.pose.orientation.z = humanTFinversed.getRotation().z();
-    srv.request.goal.pose.orientation.w = humanTFinversed.getRotation().w();
-
-    tf::StampedTransform robotTF;
-    TFlistener_.lookupTransform("base_link", "map", ros::Time(0), robotTF);
-    tf::Transform robotTFinversed = robotTF.inverse();
-    srv.request.start.header.frame_id = "map";
-    srv.request.start.pose.position.x = robotTFinversed.getOrigin().x();
-    srv.request.start.pose.position.y = robotTFinversed.getOrigin().y();
-    srv.request.start.pose.position.z = robotTFinversed.getOrigin().z();
-    srv.request.start.pose.orientation.x = robotTFinversed.getRotation().x();
-    srv.request.start.pose.orientation.y = robotTFinversed.getRotation().y();
-    srv.request.start.pose.orientation.z = robotTFinversed.getRotation().z();
-    srv.request.start.pose.orientation.w = robotTFinversed.getRotation().w();
-
+    srv.request.goal.pose = getPose(getParamValue<std::string>("human_tf"), "map");
     srv.request.tolerance = 0.5;
 
     if (client_.call(srv)){
-        ROS_INFO("Plan received");
         srv.response.plan.header.frame_id = "map";
-        planPublisher_.publish(srv.response.plan);
+    
+        const geometry_msgs::Pose humanPose = srv.request.goal.pose;
+        std::vector<geometry_msgs::PoseStamped> finalPosesList;
+        for(geometry_msgs::PoseStamped pose : srv.response.plan.poses){
+            const double distance = std::sqrt(std::pow(pose.pose.position.x - humanPose.position.x, 2) + std::pow(pose.pose.position.y - humanPose.position.y, 2));
+            if(distance >= 1.0){
+                finalPosesList.push_back(pose);
+            }
+        }
+        srv.response.plan.poses = finalPosesList;
         return srv.response.plan;
     }
     else {
@@ -53,9 +58,8 @@ nav_msgs::Path AskToRepeatActionServer::getPlan(){
 AskToRepeatActionServer::AskToRepeatActionServer() :
     actionServer_(nh_, getParamValue<std::string>("served_action_name"), boost::bind(&AskToRepeatActionServer::executeCallback, this, _1), false)
 {   
-        odometrySub_ = nh_.subscribe(getParamValue<std::string>("odometry_topic"), 1000, &AskToRepeatActionServer::robotOdometryCallback, this);
+    odometrySub_ = nh_.subscribe(getParamValue<std::string>("odometry_topic"), 1000, &AskToRepeatActionServer::robotOdometryCallback, this);
     client_ = nh_.serviceClient<nav_msgs::GetPlan>(getParamValue<std::string>("get_plan_service_name"));
-    planPublisher_ = nh_.advertise<nav_msgs::Path>("my_plan", 1000);
     
     actionServer_.start();
     ROS_INFO("%s server ready", getParamValue<std::string>("served_action_name").c_str());
