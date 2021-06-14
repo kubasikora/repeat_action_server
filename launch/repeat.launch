@@ -6,5 +6,5 @@
     <param name="odometry_topic" type="string" value="mobile_base_controller/odom" />
     
     <node pkg="repeat_action_server" name="action_server" type="repeat_action_server" output="screen" />
-    <node pkg="tf" type="static_transform_publisher" name="human_publisher" args="2 5 0 0 0 0 1 map $(arg human_tf) 100" />
+    <node pkg="tf" type="static_transform_publisher" name="human_publisher" args="-1 0 0 0 0 0 1 map $(arg human_tf) 100" />
 </launch>

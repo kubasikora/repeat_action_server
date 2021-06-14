@@ -26,7 +26,6 @@ geometry_msgs::Pose AskToRepeatActionServer::getPose(const std::string point, co
     return pose;
 }
 
-
 nav_msgs::Path AskToRepeatActionServer::getPlan(){
     nav_msgs::GetPlan srv;
     srv.request.start.header.frame_id = "map";
@@ -56,11 +55,13 @@ nav_msgs::Path AskToRepeatActionServer::getPlan(){
 }
 
 AskToRepeatActionServer::AskToRepeatActionServer() :
-    actionServer_(nh_, getParamValue<std::string>("served_action_name"), boost::bind(&AskToRepeatActionServer::executeCallback, this, _1), false)
+    actionServer_(nh_, getParamValue<std::string>("served_action_name"), boost::bind(&AskToRepeatActionServer::executeCallback, this, _1), false),
+    actionClient_("move_base", true)
 {   
     odometrySub_ = nh_.subscribe(getParamValue<std::string>("odometry_topic"), 1000, &AskToRepeatActionServer::robotOdometryCallback, this);
     client_ = nh_.serviceClient<nav_msgs::GetPlan>(getParamValue<std::string>("get_plan_service_name"));
-    
+    actionClient_.waitForServer();
+
     actionServer_.start();
     ROS_INFO("%s server ready", getParamValue<std::string>("served_action_name").c_str());
 }
@@ -69,6 +70,11 @@ AskToRepeatActionServer::~AskToRepeatActionServer(){}
 
 void AskToRepeatActionServer::executeCallback(const repeat_action_server::AskToRepeatGoalConstPtr &goal){
     nav_msgs::Path plan = getPlan();
+    geometry_msgs::PoseStamped goalPose = plan.poses[plan.poses.size() - 1];
+
+    move_base_msgs::MoveBaseGoal navigationGoal;
+    navigationGoal.target_pose = goalPose;
+    actionClient_.sendGoal(navigationGoal);
 
     std_msgs::String resultStatus;
     resultStatus.data = "finished";
