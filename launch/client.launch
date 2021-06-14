@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <node pkg="actionlib" name="pardon_client" type="axclient.py" args="/pardon_action" output="log" />
+    <node pkg="actionlib" name="repeat_client" type="axclient.py" args="/repeat_action" output="log" />
+</launch>

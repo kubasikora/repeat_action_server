@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <arg name="human_tf" value="human" />
+    <node pkg="tf" type="static_transform_publisher" name="human_publisher" args="3 5 0 0 0 0 1 map $(arg human_tf) 100" />
+</launch>
