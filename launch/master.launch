@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<launch>
-    <include file="$(find repeat_action_server)/launch/repeat.launch" ns="repeat" />
-    <include file="$(find pardon_action_server)/launch/pardon.launch" ns="pardon" />
-</launch>

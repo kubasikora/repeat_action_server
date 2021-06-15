@@ -7,7 +7,9 @@
     <param name="move_head_action_name" type="string" value="/head_controller/point_head_action" />
     <param name="odometry_topic" type="string" value="/mobile_base_controller/odom" />
     <param name="human_tf" type="string" value="$(arg human_tf)" />
+    <param name="base_link" type="string" value="base_link" />
     <param name="head_turning_velocity" type="double" value="0.4" />
+    <param name="distance_to_human" type="double" value="1.0" />
 
     <node pkg="repeat_action_server" name="repeat_action_server" type="repeat_action_server" output="screen" />
 </launch>

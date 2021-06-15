@@ -5,6 +5,16 @@
 #include<exception>
 #include<math.h>
 
+void AskToRepeatActionServer::resetHead(){
+    control_msgs::PointHeadGoal goal;
+    goal.target.header.frame_id = getParamValue<std::string>("base_link");
+    goal.target.point.x = 1.0; goal.target.point.y = 0.0; goal.target.point.z = 1.0;
+    goal.pointing_axis.x = 1.0; goal.pointing_axis.y = 0.0; goal.pointing_axis.z = 0.0;
+    goal.pointing_frame = getParamValue<std::string>("/head_controller/point_head_action/tilt_link");
+    goal.max_velocity = getParamValue<double>("head_turning_velocity");
+    headClient_.sendGoal(goal);
+}
+
 void AskToRepeatActionServer::robotOdometryCallback(const nav_msgs::Odometry message){
     currentOdom_ = message;
 }
@@ -39,9 +49,10 @@ nav_msgs::Path AskToRepeatActionServer::getPlan(){
     
         const geometry_msgs::Pose humanPose = srv.request.goal.pose;
         std::vector<geometry_msgs::PoseStamped> finalPosesList;
+        const double distanceToHuman = getParamValue<double>("distance_to_human");
         for(geometry_msgs::PoseStamped pose : srv.response.plan.poses){
             const double distance = std::sqrt(std::pow(pose.pose.position.x - humanPose.position.x, 2) + std::pow(pose.pose.position.y - humanPose.position.y, 2));
-            if(distance >= 1.0){
+            if(distance >= distanceToHuman){
                 finalPosesList.push_back(pose);
             }
         }
@@ -88,6 +99,7 @@ AskToRepeatActionServer::AskToRepeatActionServer() :
 AskToRepeatActionServer::~AskToRepeatActionServer(){}
 
 void AskToRepeatActionServer::executeCallback(const repeat_action_server::AskToRepeatGoalConstPtr &goal){
+    resetHead();
     nav_msgs::Path plan = getPlan();
     if(!plan.poses.empty()){
         geometry_msgs::PoseStamped goalPose = plan.poses[plan.poses.size() - 1];

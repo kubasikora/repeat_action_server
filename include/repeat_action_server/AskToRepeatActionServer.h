@@ -33,6 +33,7 @@ class AskToRepeatActionServer {
     void robotOdometryCallback(const nav_msgs::Odometry message);
     geometry_msgs::Pose getPose(const std::string point, const std::string origin);
     void moveHead();
+    void resetHead();
     nav_msgs::Path getPlan();
 
   public:
