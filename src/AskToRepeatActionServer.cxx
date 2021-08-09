@@ -6,12 +6,14 @@
 #include<math.h>
 
 void AskToRepeatActionServer::resetHead(){
-    control_msgs::PointHeadGoal goal;
+    control_msgs::PointHeadGoal goal; 
     goal.target.header.frame_id = getParamValue<std::string>("base_link");
     goal.target.point.x = 1.0; goal.target.point.y = 0.0; goal.target.point.z = 1.0;
-    goal.pointing_axis.x = 1.0; goal.pointing_axis.y = 0.0; goal.pointing_axis.z = 0.0;
-    goal.pointing_frame = getParamValue<std::string>("/head_controller/point_head_action/tilt_link");
-    goal.max_velocity = getParamValue<double>("head_turning_velocity");
+    goal.pointing_axis.x        = 1.0; 
+    goal.pointing_axis.y        = 0.0; 
+    goal.pointing_axis.z        = 0.0;
+    goal.pointing_frame         = getParamValue<std::string>("/head_controller/point_head_action/tilt_link");
+    goal.max_velocity           = getParamValue<double>("head_turning_velocity");
     headClient_.sendGoal(goal);
 }
 
@@ -67,8 +69,11 @@ nav_msgs::Path AskToRepeatActionServer::getPlan(){
 
 void AskToRepeatActionServer::moveHead(){
     control_msgs::PointHeadGoal goal;
-    goal.target.header.frame_id = getParamValue<std::string>("human_tf");
-    goal.target.point.z = 1.0;
+    geometry_msgs::Pose pose    = getPose(getParamValue<std::string>("human_tf"), getParamValue<std::string>("base_link"));
+    goal.target.header.frame_id = getParamValue<std::string>("base_link");
+    goal.target.point.x         = pose.position.x; 
+    goal.target.point.y         = pose.position.y; 
+    goal.target.point.z         = pose.position.z;
     goal.pointing_axis.x = 1.0; goal.pointing_axis.y = 0.0; goal.pointing_axis.z = 0.0;
     goal.pointing_frame = getParamValue<std::string>("/head_controller/point_head_action/tilt_link");
     goal.max_velocity = getParamValue<double>("head_turning_velocity");
